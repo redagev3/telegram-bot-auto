@@ -318,8 +318,8 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif text == "⬅️ Назад":
         keyboard = [
-            [KeyboardButton("� Профил)ь")],
-            [KeyboardButton("� Сливы"ж)],
+            [KeyboardButton("👤 Профиль")],
+            [KeyboardButton("💾 Сливы")],
             [KeyboardButton("📞 Поддержка")]
         ]
         reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
