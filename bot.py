@@ -302,7 +302,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
             await update.message.reply_photo(
                 photo="https://drive.google.com/uc?id=1hzzbSlEKxu39ve_GrtjaHiiPCKFZEP1p&export=view",
-                caption="📞 Поддержка\n\nНапиши @YOUR_USERNAME если есть вопросы",
+                caption="📞 Поддержка\n\nНапиши @Durovgentlemen если есть вопросы",
                 reply_markup=reply_markup
             )
         except Exception as e:
@@ -310,7 +310,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             keyboard = [[KeyboardButton("⬅️ Назад")]]
             reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
             await update.message.reply_text(
-                "📞 Поддержка\n\nНапиши @YOUR_USERNAME если есть вопросы",
+                "📞 Поддержка\n\nНапиши @Durovgentlemen если есть вопросы",
                 reply_markup=reply_markup
             )
 
