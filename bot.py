@@ -136,8 +136,8 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif text == "⬅️ Назад":
             context.user_data['admin_mode'] = False
             keyboard = [
-                [KeyboardButton("�  Профиль")],
-                [KeyboardButton("� Сливeы")],
+                [KeyboardButton("👤 Профиль")],
+                [KeyboardButton("💾 Сливы")],
                 [KeyboardButton("📞 Поддержка")]
             ]
             reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
@@ -252,7 +252,9 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             member = await context.bot.get_chat_member(CHANNEL_ID, int(user_id))
             if member.status in ["member", "administrator", "creator"]:
                 is_subscribed = True
-        except:
+            print(f"User {user_id} subscription status: {member.status}")
+        except Exception as e:
+            print(f"Subscription check error for user {user_id}: {e}")
             is_subscribed = False
         
         if not is_subscribed:
@@ -316,8 +318,8 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif text == "⬅️ Назад":
         keyboard = [
-            [KeyboardButton("👤 Профиль")],
-            [KeyboardButton("💾 Сливы")],
+            [KeyboardButton("� Профил)ь")],
+            [KeyboardButton("� Сливы"ж)],
             [KeyboardButton("📞 Поддержка")]
         ]
         reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
