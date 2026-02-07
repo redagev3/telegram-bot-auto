@@ -28,17 +28,17 @@ USERS = load_users()
 FILES = {
     "system1": {
         "name": "🎮 [A-Chassis 1.7.1 Sochi County Full FIX]",
-        "url": "https://drive.google.com/uc?id=1example1&export=download",
+        "url": "https://drive.google.com/file/d/1mPeBydKjNz_C9ARvmHQFAFZ-NYqICxtH/view?usp=sharing",
         "description": "Профессиональная система для Roblox Studio"
     },
     "system2": {
-        "name": "🎮 Roblox System #2",
-        "url": "https://drive.google.com/uc?id=1example2&export=download",
+        "name": "🎮 Пак машин из Sochi County (Не которые оживлены) (Chassis новый)",
+        "url": "https://drive.google.com/file/d/1Iubaw3PRbWMQ50w0jKODwTwFvEvruCp8/view?usp=sharing",
         "description": "Продвинутая система с интеграциями"
     },
     "system3": {
-        "name": "🎮 Roblox System #3",
-        "url": "https://drive.google.com/uc?id=1example3&export=download",
+        "name": "🎮 Префикс + Галочка для своей игры",
+        "url": "https://drive.google.com/file/d/1r9Lvq7sasuHDB3x6WlqoorEbJir5b4VI/view?usp=sharing",
         "description": "Легкая и быстрая система"
     }
 }
