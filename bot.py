@@ -58,8 +58,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             save_users(USERS)
         
         keyboard = [
-            [KeyboardButton("� SПрофиль")],
-            [KeyboardButton("� Слиdвы")],
+            [KeyboardButton("👤 Профиль")],
+            [KeyboardButton("💾 Сливы")],
             [KeyboardButton("📞 Поддержка")]
         ]
         reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
