@@ -2,6 +2,7 @@ import subprocess
 import sys
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
+import asyncio
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -21,6 +22,6 @@ def run_http_server():
 http_thread = threading.Thread(target=run_http_server, daemon=True)
 http_thread.start()
 
-# Запускаем основной бот
-process = subprocess.Popen([sys.executable, "bot.py"])
-process.wait()
+# Запускаем основной бот в основном потоке
+from bot import main
+main()
