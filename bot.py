@@ -17,7 +17,9 @@ def init_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS users
-                 (user_id TEXT PRIMARY KEY, name TEXT, banned INTEGER, warns INTEGER, downloads INTEGER)''')
+                 (user_id TEXT PRIMARY KEY, name TEXT, banned INTEGER, warns INTEGER, downloads INTEGER, has_access INTEGER)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS keys
+                 (key_id INTEGER PRIMARY KEY AUTOINCREMENT, key_text TEXT UNIQUE, used INTEGER, used_by TEXT)''')
     conn.commit()
     conn.close()
 
@@ -28,14 +30,14 @@ def load_user(user_id):
     row = c.fetchone()
     conn.close()
     if row:
-        return {"name": row[1], "banned": bool(row[2]), "warns": row[3], "downloads": row[4]}
+        return {"name": row[1], "banned": bool(row[2]), "warns": row[3], "downloads": row[4], "has_access": bool(row[5])}
     return None
 
 def save_user(user_id, user_data):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute('INSERT OR REPLACE INTO users VALUES (?, ?, ?, ?, ?)',
-              (str(user_id), user_data["name"], int(user_data["banned"]), user_data["warns"], user_data["downloads"]))
+    c.execute('INSERT OR REPLACE INTO users VALUES (?, ?, ?, ?, ?, ?)',
+              (str(user_id), user_data["name"], int(user_data["banned"]), user_data["warns"], user_data["downloads"], int(user_data.get("has_access", False))))
     conn.commit()
     conn.close()
 
@@ -47,8 +49,37 @@ def get_all_users():
     conn.close()
     users = {}
     for row in rows:
-        users[row[0]] = {"name": row[1], "banned": bool(row[2]), "warns": row[3], "downloads": row[4]}
+        users[row[0]] = {"name": row[1], "banned": bool(row[2]), "warns": row[3], "downloads": row[4], "has_access": bool(row[5])}
     return users
+
+def check_key(key_text):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute('SELECT * FROM keys WHERE key_text = ?', (key_text,))
+    row = c.fetchone()
+    conn.close()
+    if row and not row[2]:  # row[2] is 'used'
+        return True
+    return False
+
+def use_key(key_text, user_id):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute('UPDATE keys SET used = 1, used_by = ? WHERE key_text = ?', (str(user_id), key_text))
+    conn.commit()
+    conn.close()
+
+def add_key(key_text):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    try:
+        c.execute('INSERT INTO keys (key_text, used, used_by) VALUES (?, 0, NULL)', (key_text,))
+        conn.commit()
+        conn.close()
+        return True
+    except:
+        conn.close()
+        return False
 
 init_db()
 
@@ -109,6 +140,7 @@ async def adminpanel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [KeyboardButton("✅ Разбанить")],
         [KeyboardButton("⚠️ Предупреждение")],
         [KeyboardButton("📢 Отправить уведомление")],
+        [KeyboardButton("🔑 Создать ключ")],
         [KeyboardButton("⬅️ Назад")]
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
@@ -129,9 +161,33 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "name": user_name,
             "banned": False,
             "warns": 0,
-            "downloads": 0
+            "downloads": 0,
+            "has_access": False
         })
         user_data = load_user(user_id)
+    
+    # Проверка ввода ключа
+    if context.user_data.get('waiting_for_key'):
+        if check_key(text):
+            use_key(text, user_id)
+            user_data["has_access"] = True
+            save_user(user_id, user_data)
+            context.user_data['waiting_for_key'] = False
+            
+            keyboard = [
+                [KeyboardButton("👤 Профиль")],
+                [KeyboardButton("💾 Сливы")],
+                [KeyboardButton("📞 Поддержка")]
+            ]
+            reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+            await update.message.reply_text(
+                "✅ Ключ активирован! Теперь у тебя есть доступ к файлам.",
+                reply_markup=reply_markup
+            )
+            return
+        else:
+            await update.message.reply_text("❌ Неверный ключ. Попробуй еще раз:")
+            return
     
     if user_data.get("banned"):
         await update.message.reply_text("🚫 Ты забанен и не можешь использовать бота")
@@ -166,6 +222,16 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif text == "📢 Отправить уведомление":
             await update.message.reply_text("Напиши текст уведомления:")
             context.user_data['admin_action'] = 'notify'
+            return
+        
+        elif text == "🔑 Создать ключ":
+            import random
+            import string
+            key = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+            if add_key(key):
+                await update.message.reply_text(f"✅ Ключ создан: `{key}`")
+            else:
+                await update.message.reply_text("❌ Ошибка при создании ключа")
             return
         
         elif text == "⬅️ Назад":
@@ -273,17 +339,27 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("🚫 Ты забанен и не можешь скачивать файлы")
             return
         
-        keyboard = []
-        for file_id, file_info in FILES.items():
-            keyboard.append([KeyboardButton(file_info["name"])])
-        keyboard.append([KeyboardButton("⬅️ Назад")])
-        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+        if user_data.get("has_access"):
+            keyboard = []
+            for file_id, file_info in FILES.items():
+                keyboard.append([KeyboardButton(file_info["name"])])
+            keyboard.append([KeyboardButton("⬅️ Назад")])
+            reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
+            await update.message.reply_text(
+                "💾 Доступные файлы:",
+                reply_markup=reply_markup
+            )
+            context.user_data["in_files"] = True
+            return
+        
+        keyboard = [[KeyboardButton("⬅️ Назад")]]
+        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
         await update.message.reply_text(
-            "💾 Доступные файлы:",
+            "🔑 У тебя нет доступа!\n\nВведи ключ доступа:",
             reply_markup=reply_markup
         )
-        context.user_data["in_files"] = True
+        context.user_data['waiting_for_key'] = True
 
     elif text in [file_info["name"] for file_info in FILES.values()]:
         file_info = None
