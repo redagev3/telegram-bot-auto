@@ -168,7 +168,22 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Проверка ввода ключа
     if context.user_data.get('waiting_for_key'):
-        if check_key(text):
+        if text in ["⬅️ Назад", "👤 Профиль", "💾 Сливы", "📞 Поддержка"]:
+            context.user_data['waiting_for_key'] = False
+            if text == "⬅️ Назад":
+                keyboard = [
+                    [KeyboardButton("👤 Профиль")],
+                    [KeyboardButton("💾 Сливы")],
+                    [KeyboardButton("📞 Поддержка")]
+                ]
+                reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+                await update.message.reply_text(
+                    "🎉 Добро пожаловать!\n\nВыбери раздел:",
+                    reply_markup=reply_markup
+                )
+                return
+            # Если нажал другую кнопку, обработаем её ниже
+        elif check_key(text):
             use_key(text, user_id)
             user_data["has_access"] = True
             save_user(user_id, user_data)
