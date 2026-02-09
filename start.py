@@ -3,6 +3,7 @@ import sys
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import asyncio
+import os
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -17,6 +18,10 @@ class Handler(BaseHTTPRequestHandler):
 def run_http_server():
     server = HTTPServer(('0.0.0.0', 8000), Handler)
     server.serve_forever()
+
+# Удаляем старую БД чтобы пересоздалась с ключами
+if os.path.exists("users.db"):
+    os.remove("users.db")
 
 # Запускаем HTTP сервер в отдельном потоке
 http_thread = threading.Thread(target=run_http_server, daemon=True)
